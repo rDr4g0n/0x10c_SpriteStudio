@@ -1,0 +1,886 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+	<title>Sprite Studio 0.9.1 - 0x10c</title>
+	<meta charset="utf-8">
+	
+	<link href='http://fonts.googleapis.com/css?family=Bitter' rel='stylesheet' type='text/css'>
+	
+	<style>
+	
+		/**/
+		/* Mostly functional styling here */
+		/**/
+		
+		* { margin: 0; padding: 0; }
+		#charmap { line-height: 11px; margin:auto; }
+		#charmap .character { display: inline-block; position: relative; border: solid 1px #DDD; background-color: white; cursor: pointer; }
+		#charmap .character div{ width:4px; height:4px; }
+		#charmap .character div.on{ background-color: black; }
+		#charmap .character .charIndex{ display: none; }
+		
+		#charedit { margin: auto; width: 88px; padding: 1px; background-color: #CCC;
+			-webkit-user-select: none;  /* Chrome all / Safari all */
+			-moz-user-select: none;     /* Firefox all */
+			-ms-user-select: none;      /* IE 10+ */
+			-o-user-select: none;
+			user-select: none; 		
+		}
+		#charedit .character { }
+		#charedit .character div{ width:20px; height:20px; margin: 1px; background-color: #EEE; }
+		#charedit .character div.on{ background-color: black;}
+		#charedit.noGrid .character div{ margin: 0; width: 22px; height: 22px; }
+		#charedit .character .charIndex{ display: none; }
+		
+		.disabled { color: #AAA; cursor: default;}
+		
+		
+		
+		/**/
+		/* Prettification styling here */
+		/**/
+		
+		body { background-color: #888; font-family: arial; }
+		a { color: #054484; }
+		h1 { font-size: 38px; font-family: 'Bitter', serif; }
+		
+		.header { width: 100%; background-color: #333; color: #CCC; text-align: center; padding: 15px 0; border-bottom: solid 2px #2e81d7; }
+		
+		.boxyBox { width: 600px; margin: 20px auto; padding: 10px; background-color: #CCC; border-radius: 2px;}
+		
+		.resetFontBox {text-align:center; color: white;}
+		.resetFontBox a { color: white; text-decoration: none;}
+		.resetFontBox a:hover { text-decoration: underline;}
+		
+		#toolbox { float: left; }
+		#toolbox hr {margin: 10px 0;}
+		#toolbox a { display: block; overflow:hidden; margin: 5px; width: 35px; height: 35px; border-radius: 4px; }
+		#toolbox a:hover { background-color: rgba(255,255,255,.3); }
+		#toolbox a.selected { background-color: white; }
+		#toolbox a.toggleColor { background-image: url(swapColor2.png);  }
+		#toolbox a.toggleColor.swap { background-image: url(swapColor1.png);  }
+		#toolbox a.regularBrush { background-image: url(brush.png);  }
+		#toolbox a.beepBoopBrush { background-image: url(flipBrush.png);  }		
+		#toolbox a.fillTool { background-image: url(fill.png);  }		
+		#toolbox a.reverseTool { background-image: url(reverse.png);  }		
+		#toolbox a.undoTool { background-image: url(undo.png);  }		
+		#toolbox a.undoTool.disabled { background-image: url(undoDisabled.png);  }		
+		#toolbox a.toggleGrid { background-image: url(grid.png);  }		
+		#toolbox a.importLink { background-image: url(import.png);  }		
+		#toolbox a.exportLink { background-image: url(export.png);  }		
+		
+		#charmap .character:hover { border: solid 1px #2e81d7; background-color: #e4f1ff; }
+		#charmap .character:hover .charIndex{ display: block; width: 100%; height: 30%; text-align: center; position: absolute; top: 0; left: 0; font-size: 10px; font-family: 'Bitter', serif; background-color: rgba(46,129,215,.9); color: white;}		
+		#charmap .character.hot { border: solid 1px #2e81d7; background-color: #b1d8ff;}
+		
+		.chareditHolder { display: block; width: 200px; margin: auto; text-align:center; visibility: hidden;}
+		.characterID { font-size: 28px; margin: 10px; font-family: 'Bitter', serif;}
+		.characterHex, .characterBin { font-family: courier, monospace; margin: 10px;}		
+		
+		#charedit .character.paintFore { cursor: url("foreCur.png") 12 12, default; }
+		#charedit .character.paintBack { cursor: url("backCur.png") 12 12, default; }
+		#charedit .character.paintFlip { cursor: url("flipCur.png") 12 12, default; }
+		
+		.tooltip { position: absolute; top: 0; left: 0; background-color: #e4f1ff; font-size: 12px; padding: 3px; }
+		
+		.footer { width: 600px; margin: auto; text-align:center; font-size: 12px; color: #444; }
+		
+		.modalLightener { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: rgba(0,0,0,.6); }
+		.modal { display: none; width: 400px; margin: auto; padding: 30px; position: absolute; top: 0; left: 0; background-color: #EEE; border-radius: 5px; border-top: solid #2e81d7 8px;}
+		.modal select, .modal label, .modal button { display: block; padding: 5px; }
+		.modal textarea { display: block; }		
+		.modal p { font-size: 14px; color: #666; }
+		.modal textarea { width: 100%; height: 100px; }
+		.modal .butt { padding: 5px; float:right;}
+		.modal .closeModal { font-size: 14px; text-decoration: none; font-weight: bold; margin: 0 10px; }
+		
+	</style>
+	
+	<!--[if gte IE 9]>
+		<style>
+			#charmap { line-height: 0; margin:auto; }
+		</style>		
+	<![endif]-->
+	
+</head>
+<body>
+
+<div class="header">
+	<h1>0x10c Sprite Studio v.9.1</h1>
+	<p>Create and edit sprite sheets (fonts) for the LEM1802 Display from the game 0x10c</p>
+</div>
+
+<div class="resetFontBox">
+	<br/>
+	<a href="#" class="clearFontLink">Clear Font</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+	<a href="#" class="restoreDefaultLink">Restore to Default Font</a>
+</div>
+
+<div class="boxyBox">
+	<div id="charmap" cellpadding=0 cellspacing=0></div>
+</div>
+
+<div class="boxyBox">
+	<div id="toolbox">
+		<a href="#" class="toggleColor" data-tip="Swap Brush Color (x)"></a>
+		<a href="#" class="regularBrush" data-tip="Brush (b)"></a>
+		<a href="#" class="beepBoopBrush selected" data-tip="Flip Brush (a)"></a>
+		<a href="#" class="fillTool" data-tip="Fill (g)"></a>		
+		<a href="#" class="reverseTool" data-tip="Invert (r)"></a>		
+		<hr/>		
+		<a href="#" class="undoTool disabled" data-tip="Undo (ctrl+z)"></a>		
+		<hr/>		
+		<a href="#" class="toggleGrid" data-tip="Toggle Grid (v)"></a>		
+		<hr/>		
+		<a href="#" class="importLink" data-tip="Import Font"></a>
+		<a href="#" class="exportLink" data-tip="Export Font"></a>		
+	</div>
+	
+	<div class="chareditHolder">
+		<div class="characterID"></div>
+		<div id="charedit"></div>
+		<div class="characterHex"></div>
+		<div class="characterBin"></div>
+	</div>
+	
+	<br style="clear:both"/>
+</div>
+
+<div class="footer">Design and code by <a href="mailto:rDr4g0n@gmail.com">rDr4g0n</a>. After v1, feel free to stick this junk into your own 0x10c tool.</div>
+
+<div class="modalLightener"></div>
+<div class="importModal modal">
+	<h1>Import Font</h1>
+	<p>Accepts 0x10c LEM1802 display formatted spritesheet as a hex string. Import will automatically remove "0x", "dat", commas, and white space from the hex string.</p><br/>
+	<textarea class="importTextarea" placeholder="sexy hexy here"></textarea><br/><br/>
+	<button class="importButt butt">Import Font &raquo;</button>
+	<a href="#" class="closeModal butt">close</a>
+</div>
+<div class="exportModal modal">
+	<h1>Export Font</h1><br/>
+	<label>Export Format</label>
+	<select class="exportFormat">
+		<option value="bin">Straight Binary</option>
+		<option value="hex">Straight Hex</option>
+		<option value="hex1" selected>Formatted Hex (single 'dat', hex separated into words)</option>
+	</select><br/><br/>
+	<button class="exportButt butt">Export Font &raquo;</button>
+	<a href="#" class="closeModal butt">close</a>
+	<br style="clear:both;"/><br/><br/>
+	<textarea class="exportTextarea" placeholder="Made fresh to order."></textarea>
+	
+</div>
+
+<br/>
+
+<!-- SCRIPTS -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+
+<script>
+	//********************************************************
+	//
+	// Made by me! rDr4g0n@gmail.com
+	//
+	// feel free to reuse, but please give me credit! I am a nobody js developer, so it 
+	// would be cool to see the community saying "hey man, this guy wrote a cool thingy!".
+	// plus it looks good on a resume: "Experience - wrote cool thing. References - guys on forums."
+	//
+	//********************************************************
+	
+	// CHANGELOG
+	// .9.1
+		// - changed "reverse" tool to "invert", but kept 'r' shortcut as its left hand only
+	
+	// TODO v1		
+	// modularize everything to make easy peasy plugin (so devs can stick this into their project)
+		// make import/export more modular (would be the main public API functions)
+		// thoroughly comment all functions
+		// get own scope
+		// dynamically attach all spritestudio html elements to a single element
+	
+	// BUGS / ANNOYANCES
+	// when dragging, the starting pixel isnt painted
+	// jumps to top when tools clicked (if your window is small enough to scroll) and e.preventDefault() doesnt stop it
+	// custom cursors arent working in IE (tried .cur file with no success)
+	// IE9 (and probably other IE) #charmap .character mouseover is jacked up
+	
+	// TODO improvements
+	// storing binary in 3D array may not be the smartest or fastest format
+	// pixelPaint - if correct color is already set, don't run function (save some cycles)
+	
+	// TODO future ver
+	// drag n drop reoder of characters
+	// multiple selection of characters (fill all, reverse all, paint all?)
+	// ability to clone chars
+	// allow user to change fore and background colors (purely visual), or have a few pre-selected color pairs
+	// redo function
+	// undo at stroke level rather than pixel level?
+	// add other undo actions besides paint/fill/reverse?
+	// arbitrary number of fonts loaded / able to copy/paste characters between fonts
+	// import from bitmapped image
+	// marquee/select tool - specify start/end location and copy bits in that space to a copy buffer
+	
+	
+	// the big ol 3D array containing all the character data
+	var fontBinaryArray = [];
+	
+	// array containing snapshots of each character as it is edited
+	var undoStack = [];
+	// num of undos to save
+	var undoHistoryLength = 200;
+	
+	// html template for a single character
+	var character = [];
+	
+	// if brush should paint or not
+	var brushActive = false;
+	
+	// 1 : brush paints brushColor
+	// 2 : brush flips whatever bit is there
+	var brushMode = 2;
+	
+	// 0 : background
+	// 1 : foreground
+	var brushColor = 1;
+	
+	// LEM1802 default font
+	var defaultFont = "0xb79e, 0x388e, 0x722c, 0x75f4, 0x19bb, 0x7f8f, 0x85f9, 0xb158, 0x242e, 0x2400, 0x082a, 0x0800, 0x0008, 0x0000, 0x0808, 0x0808, 0x00ff, 0x0000, 0x00f8, 0x0808, 0x08f8, 0x0000, 0x080f, 0x0000, 0x000f, 0x0808, 0x00ff, 0x0808, 0x08f8, 0x0808, 0x08ff, 0x0000, 0x080f, 0x0808, 0x08ff, 0x0808, 0x6633, 0x99cc, 0x9933, 0x66cc, 0xfef8, 0xe080, 0x7f1f, 0x0701, 0x0107, 0x1f7f, 0x80e0, 0xf8fe, 0x5500, 0xaa00, 0x55aa, 0x55aa, 0xffaa, 0xff55, 0x0f0f, 0x0f0f, 0xf0f0, 0xf0f0, 0x0000, 0xffff, 0xffff, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0x005f, 0x0000, 0x0300, 0x0300, 0x3e14, 0x3e00, 0x266b, 0x3200, 0x611c, 0x4300, 0x3629, 0x7650, 0x0002, 0x0100, 0x1c22, 0x4100, 0x4122, 0x1c00, 0x1408, 0x1400, 0x081c, 0x0800, 0x4020, 0x0000, 0x0808, 0x0800, 0x0040, 0x0000, 0x601c, 0x0300, 0x3e49, 0x3e00, 0x427f, 0x4000, 0x6259, 0x4600, 0x2249, 0x3600, 0x0f08, 0x7f00, 0x2745, 0x3900, 0x3e49, 0x3200, 0x6119, 0x0700, 0x3649, 0x3600, 0x2649, 0x3e00, 0x0024, 0x0000, 0x4024, 0x0000, 0x0814, 0x2200, 0x1414, 0x1400, 0x2214, 0x0800, 0x0259, 0x0600, 0x3e59, 0x5e00, 0x7e09, 0x7e00, 0x7f49, 0x3600, 0x3e41, 0x2200, 0x7f41, 0x3e00, 0x7f49, 0x4100, 0x7f09, 0x0100, 0x3e41, 0x7a00, 0x7f08, 0x7f00, 0x417f, 0x4100, 0x2040, 0x3f00, 0x7f08, 0x7700, 0x7f40, 0x4000, 0x7f06, 0x7f00, 0x7f01, 0x7e00, 0x3e41, 0x3e00, 0x7f09, 0x0600, 0x3e61, 0x7e00, 0x7f09, 0x7600, 0x2649, 0x3200, 0x017f, 0x0100, 0x3f40, 0x7f00, 0x1f60, 0x1f00, 0x7f30, 0x7f00, 0x7708, 0x7700, 0x0778, 0x0700, 0x7149, 0x4700, 0x007f, 0x4100, 0x031c, 0x6000, 0x417f, 0x0000, 0x0201, 0x0200, 0x8080, 0x8000, 0x0001, 0x0200, 0x2454, 0x7800, 0x7f44, 0x3800, 0x3844, 0x2800, 0x3844, 0x7f00, 0x3854, 0x5800, 0x087e, 0x0900, 0x4854, 0x3c00, 0x7f04, 0x7800, 0x047d, 0x0000, 0x2040, 0x3d00, 0x7f10, 0x6c00, 0x017f, 0x0000, 0x7c18, 0x7c00, 0x7c04, 0x7800, 0x3844, 0x3800, 0x7c14, 0x0800, 0x0814, 0x7c00, 0x7c04, 0x0800, 0x4854, 0x2400, 0x043e, 0x4400, 0x3c40, 0x7c00, 0x1c60, 0x1c00, 0x7c30, 0x7c00, 0x6c10, 0x6c00, 0x4c50, 0x3c00, 0x6454, 0x4c00, 0x0836, 0x4100, 0x0077, 0x0000, 0x4136, 0x0800, 0x0201, 0x0201, 0x0205, 0x0200";
+	
+	var blankFont = repeat("0",1024);
+	
+	$(document).ready(function(){
+		
+		// build a single character template
+		character.push("<table cellpadding='0' cellspacing='0' class='character'>");
+		
+		// build the binary data to be used for each character
+		var characterBinaryArray = [];
+		
+		// generate rows
+		for(var i=0; i<8; i++){
+		
+			// while we're in here, zero out our fontBinaryArray
+			characterBinaryArray[i] = [];
+			
+			character.push("<tr data-y='"+ i +"'>");
+			
+			// generate cells per row
+			for(var j=0; j<4; j++){
+				
+				// while we're in here, zero out our fontBinaryArray
+				characterBinaryArray[i][j] = 0;
+			
+				character.push("<td data-x='"+ j +"'><div data-x='"+ j +"' data-y='"+ i +"' data-bit='0'></div></td>");
+				
+			}
+			
+			character.push("</tr>");			
+		}
+		
+		character.push("</table>");
+		
+		// repeat single character 128 times
+		var bunchOChars = repeat(character.join(""), 128);
+		
+		// dusplicate characterBinaryArray 128 times
+		for(var i = 0; i<128; i++){
+			fontBinaryArray.push( deepCopy(characterBinaryArray) );
+		}
+				
+		// dump em in our holder thingy
+		$("#charmap").append(bunchOChars);
+
+		// identifier for each character
+		$("#charmap .character").each(function(i){
+			$(this).attr("data-z", i).addClass("z"+ i).append("<div class='charIndex'>"+ i +"</div>");
+		});
+		
+		// import default font
+		importFont(defaultFont);
+
+		// we set a bool to determine if mouse should "paint" or not
+		// so we need a global unset function for that bool
+		$("body").mouseup(function(e){
+			brushActive = false;
+		});
+		
+		$(".toggleColor").click(toggleBrushColor);
+		$("body").keypress(function(e){
+			switch(e.which){
+				case 97:
+					// a - flip brush
+					$(".beepBoopBrush").click();
+					break;
+				case 98:
+					// b - brush
+					$(".regularBrush").click();
+					break;
+				case 103:
+					// g - fill
+					$(".fillTool").click();
+					break;
+				case 114:
+					// r - reverse
+					$(".reverseTool").click();
+					break;
+				case 118:
+					// v - toggle grid
+					$(".toggleGrid").click();
+					break;
+				case 120:
+					// x - toggle color
+					$(".toggleColor").click();
+					break;
+				case 26:
+					// ctrl + z - undo
+					if(e.ctrlKey) $(".undoTool").click();
+					break;
+				case 122:
+					// ctrl + z - undo
+					if(e.ctrlKey) $(".undoTool").click();
+					break;
+			}
+		});
+		$(".beepBoopBrush").click(function(e){
+			// this brush reverses the bit it touches rather than painting
+			// foreground or background	
+			brushMode = 2;
+			updateBrushCursor(2);
+			$("#toolbox .regularBrush").removeClass("selected");
+			$(this).addClass("selected");			
+		});
+		$(".regularBrush").click(function(e){
+			// paints foreground color		
+			brushMode = 1; 
+			updateBrushCursor(brushColor);			
+			$("#toolbox .beepBoopBrush").removeClass("selected");
+			$(this).addClass("selected");
+		});
+		$(".fillTool").click(function(e){
+			// fills whole character with selected color
+			fillTool( $("#charedit .character").attr("data-z") );
+		});
+		$(".reverseTool").click(function(e){
+			// reverses character
+			reverseTool( $("#charedit .character").attr("data-z") );
+		});
+		$(".toggleGrid").click(function(e){
+			// remove grid from #charedit
+			$("#charedit").toggleClass("noGrid");
+		});
+		$(".exportLink").click(function(e){
+			// open up export dialogue
+			$(".modalLightener").show();
+			centerModal($(".exportModal"));
+			$(".exportModal").show();			
+		});
+		$(".importLink").click(function(e){			
+			// open up import dialogue
+			$(".modalLightener").show();
+			centerModal($(".importModal"));
+			$(".importModal").show();
+		});
+		$("#toolbox a").hover(tooltip, function(e){
+			$(".tooltip").remove();
+		});
+		$(".closeModal, .modalLightener").click(closeModal);	
+		$(".importButt").click(function(e){
+			importFont( $(".importTextarea").val() );
+			closeModal();
+		});		
+		$(".exportButt").click(function(e){
+			var exportedFont = exportFont( $(".exportFormat").val() );
+			$(".exportTextarea").text( exportedFont );
+		});		
+		$(".restoreDefaultLink").click(function(e){
+			if(confirm("You sure about that?")) importFont(defaultFont);
+		});		
+		$(".clearFontLink").click(function(e){
+			if(confirm("You sure about that?")) importFont(blankFont);
+		});	
+		
+	});
+	
+	// center modal dialogue
+	function centerModal(modal){
+		
+		modal = $(modal);
+		
+		var winHeight = $(window).innerHeight();
+		var winWidth = $(window).innerWidth();
+		var modalHeight = modal.outerHeight();
+		var modalWidth = modal.outerWidth();
+		
+		var top = (winHeight * .5) - (modalHeight * .5);
+		var left = (winWidth * .5) - (modalWidth * .5);
+		
+		modal.css("top",top).css("left",left);
+		
+	}
+	
+	// close modal/clear font data
+	function closeModal(){
+		$(".modal, .modalLightener").hide();
+		// clear export/import data
+		$(".exportTextarea, .importTextarea").text("");
+	}
+	
+	// get to editing when a char is clicked
+	function startEdit(ch){
+		$("#charmap .hot").removeClass("hot");	
+		ch.addClass("hot");			
+	
+		var z = findZ(ch);	
+		
+		// load bits from fontBinaryArray
+		var chEdit = createDOMCharacterFromArr(fontBinaryArray[z], z);
+		
+		// pass the character to the edit box for editing times
+		$("#charedit").html(chEdit);
+		
+		// show chareditHolder
+		$(".chareditHolder").css("visibility", "visible");
+		
+		// pass z to characterID
+		$(".chareditHolder .characterID").text(z);
+		
+		updateHexAndBinInDOM(z);
+		
+		// update brush cursor
+		if(brushMode == 2) updateBrushCursor(2);
+		else updateBrushCursor(brushColor);
+		
+		// listen for mouse events to enable/disable the brush
+		chEdit.find("div").mousedown(function(e){
+			e.originalEvent.preventDefault();
+			brushActive = true;
+			// enabling this paints the first pixel, but in the case of
+			// the flip brush, it paints then unpaints the pixel!
+			//pixelPaint($(this));
+		}).mouseover(function(e){
+			if(brushActive) pixelPaint($(this));
+		}).click(function(e){
+			pixelPaint($(this));
+		});
+		
+	}
+	
+	// stuff to do when an individual pixel is clicked/scrubbed
+	function pixelPaint(pixel){
+		
+		// TODO - if color is already correct, return		
+		
+		// find x,y,z
+		var x = pixel.attr("data-x");
+		var y = pixel.attr("data-y");
+		var z = findZ(pixel);
+
+		// push this guy to undo stack
+		pushUndo(fontBinaryArray[z], z);			
+		
+		var newBit = brushColor;
+		
+		// if brushMode is 2, flip bits instead of painting a particular
+		// color
+		if(brushMode == 2){
+			newBit = fontBinaryArray[z][y][x]==0?1:0;
+		}		
+		
+		//console.log("x: "+ x +" y: "+ y +" z: "+ z +" bit: "+ bit);
+				
+		// update pixel in fontBinaryArray
+		updateCharMap(x,y,z, newBit);
+		
+		// update any instance in DOM of this pixel
+		updateCharacterInDOM(x,y,z, newBit);
+
+		updateHexAndBinInDOM(z);
+		
+	}
+	
+	// updates the bit for the selected pixel in fontBinaryArray
+	function updateCharMap(x,y,z, bit){
+		
+		// update pixel status in fontBinaryArray
+		fontBinaryArray[z][y][x] = bit;
+	}
+	
+	// updates the bit for selected pixel in DOM
+	function updateCharacterInDOM(x,y,z, bit){		
+		// use x,y and z to find and update correct div
+		// I tried a few different selectors before I settled on this one as being fastest
+		$("table.character.z"+ z).each(function(){
+			 $(this).find("tr").eq(y).find("td").eq(x).find("div").attr("class",bit==0?"off":"on").attr("data-bit",bit);
+		});
+		
+	}
+	
+	// uses char array and creates a DOM character element with correct bits set
+	function createDOMCharacterFromArr(char, z){		
+		// dump a copy of blank character into a string, then jquery-ify it 
+		var chEdit = $(character.join(""));
+		
+		// set table identifier and metadata
+		chEdit.attr("data-z", z).addClass("z"+ z).append("<div class='charIndex'>"+ z +"</div>");
+		
+		// iterate elements of char, find set bits, and set them in chEdit
+		for(var y in char){
+			for(var x in char[y]){
+				var bit = char[y][x];
+				if(bit == 1){
+					chEdit.find("tr").eq(y).find("td").eq(x).find("div").attr("class",bit==0?"off":"on").attr("data-bit",bit);
+				}				
+			}
+		}
+		
+		return chEdit;
+	}
+	
+	// alternates foreground and background color
+	function toggleBrushColor(){
+		// flip brushColor and add custom cursor class thingy
+		if(brushColor==0){
+			brushColor = 1;			
+		} else {
+			brushColor = 0;
+		}
+		
+		if(brushMode == 1) updateBrushCursor(brushColor);
+		
+		$(".toggleColor").toggleClass("swap");
+	}
+	
+	// flip all bits to current color
+	function fillTool(z){
+		
+		// push this guy to undo stack
+		pushUndo(fontBinaryArray[z], z);
+		
+		var newBit = brushColor;
+				
+		for(var y in fontBinaryArray[z]){
+			for(var x in fontBinaryArray[z][y]){
+
+				//console.log("x: "+ x +" y: "+ y +" z: "+ z +" bit: "+ bit);
+						
+				// update pixel in fontBinaryArray
+				updateCharMap(x,y,z, newBit);
+				
+				// update any instance in DOM of this pixel
+				updateCharacterInDOM(x,y,z, newBit);
+			}
+		}
+		
+		updateHexAndBinInDOM(z);
+	}
+	
+	// reverse all bits
+	function reverseTool(z){
+		
+		// push this guy to undo stack
+		pushUndo(fontBinaryArray[z], z);
+		
+		for(var y in fontBinaryArray[z]){
+			for(var x in fontBinaryArray[z][y]){				
+		
+				var newBit = fontBinaryArray[z][y][x] == 0 ? 1 : 0;
+
+				//console.log("x: "+ x +" y: "+ y +" z: "+ z +" bit: "+ bit);
+						
+				// update pixel in fontBinaryArray
+				updateCharMap(x,y,z, newBit);
+				
+				// update any instance in DOM of this pixel
+				updateCharacterInDOM(x,y,z, newBit);
+			}
+		}
+		
+		updateHexAndBinInDOM(z);
+	}
+		
+	// push a copy of character and its id to undoStack
+	function pushUndo(char, z){
+		// if undoStack is larger than undoHistoryLength, remove first item
+		if(undoStack.length > undoHistoryLength){
+			undoStack.shift()
+		}
+		undoStack.push([deepCopy(char),parseInt(z)]);
+		
+		// if undoStack.length > 1, make undoTool active
+		if(undoStack.length > 0){			
+			$(".undoTool").removeClass("disabled").unbind().click(undo).hover(tooltip, function(e){
+				$(".tooltip").remove();
+			});
+		}
+	}
+	// restore a character from undoStack
+	// TODO - undo n steps
+	function undo(){
+		
+		// if there are no more undos left, return
+		if(undoStack.length < 1) return;
+		
+		var char = undoStack.pop();
+		
+		// if undoStack.length <= 1, disable undo tool
+		if(undoStack.length < 1){			
+			$(".undoTool").unbind().addClass("disabled");
+		}
+		
+		// update fontBinaryArray with the undo character
+		fontBinaryArray[char[1]] = char[0];
+		
+		// update display with undo character
+		var chEdit = createDOMCharacterFromArr(fontBinaryArray[char[1]], char[1]);
+		
+		// find the character in the DOM and replace it with chEdit
+		$("#charmap .character.z"+ char[1]).replaceWith(chEdit);
+		chEdit.click(function(e){startEdit($(this));});
+		startEdit(chEdit);
+	}
+	
+	// changes cursor used for #charedit based on which brush is selected
+	function updateBrushCursor(num){
+		
+		switch(num){
+			case 0: 
+				$("#charedit .character").removeClass("paintFore paintBack paintFlip").addClass("paintBack");
+				break;
+			case 1: 
+				$("#charedit .character").removeClass("paintFore paintBack paintFlip").addClass("paintFore");
+				break;
+			case 2: 
+				$("#charedit .character").removeClass("paintFore paintBack paintFlip").addClass("paintFlip");
+				break;
+		}
+		
+	}
+	
+	// rotates each character 90degrees (per LEM1802 specification) then exports
+	// resulting data in selected format
+	function exportFont(format){
+		
+		var rotatedCharacters = [];
+		
+		// rotate characters and dump in rotatedCharacters
+		for(var z in fontBinaryArray){
+			for(var x = 0; x<=3; x++){
+				for(var y = 7; y>=0; y--){
+					rotatedCharacters.push(fontBinaryArray[z][y][x]);
+				}
+			}			
+		}
+		
+		if (format == "bin") return squishArray(rotatedCharacters);
+		
+		// convert binary string to hex
+		var hexFont = binToHex(rotatedCharacters.join(""));
+		
+		if (format == "hex") return hexFont;
+		
+		// TODO - move formatting to its own function and allow exportFont to take function
+		// 		  as an argument for custom formatting
+		
+		// format hex for 0x10c with data and commas and 0x and stuff
+		var almostFinalFontData = ["dat "];
+		// step through hexFont 4 chars at a time and dump into almostFinalFontData
+		for(var i=0; i<hexFont.length; i+=4){
+			almostFinalFontData.push("0x"+ hexFont.slice(i,i+4) +", ");
+		}
+		
+		var finalFontData = almostFinalFontData.join("");
+		
+		// knock off that trailing comma, lawl!
+		finalFontData = finalFontData.substr(0,finalFontData.length-2);
+		
+		return finalFontData;
+		
+	}
+	
+	// accepts a string of hex values, scrubs out commas, spaces, '0x', and 'dat', 
+	// then converts to bin, then finally to the array format used by this tool
+	// and finally, updates the font that is displayed
+	function importFont(hex){
+		
+		// get hex string and scrub of spaces, commas, 'dat', and '0x', hopefully leaving only hex data
+		hex = hex.replace(/(dat|0x|\,|\s)/gi, "");
+
+		// convert hex string to binary string
+		var bin = hexToBin(hex);
+		
+		// iterate through bin 32 bits at a time (2 words, or 1 character)
+		for(var i=0; i<bin.length-1; i+=32){
+			var charArr = [];
+			
+			// do some funky rotation from 0x10c formatted character data
+			var z = i/32;
+			for(var x=7; x>=0; x--){
+				var row = [];
+				for(var y=0; y<=24; y+=8){
+					row.push( parseInt(bin.substr( (z*32)+x+y , 1 )) );				
+				}			
+				charArr.push(row);
+			}
+			
+			// update model and view with new junk
+			var charDOM = createDOMCharacterFromArr(charArr,z);
+			$("#charmap .z"+ z).replaceWith(charDOM);
+			fontBinaryArray[z] = charArr;
+		}
+		
+		// get .character's listening for clicks
+		$(".character").click(function(e){					
+			startEdit($(this));
+		});
+		
+		// clear any pending selected character
+		$("#charedit").html("");
+		
+		// hide chareditHolder
+		$(".chareditHolder").css("visibility", "hidden");
+		
+	}
+	
+	// this is kinda a hack, not very sexy, but works.
+	function updateHexAndBinInDOM(z){
+		
+		// rotate the binary data so that its LEM1082 compliant
+		var rotatedCharacters = [];
+		for(var x = 0; x<=3; x++){
+			for(var y = 7; y>=0; y--){
+				rotatedCharacters.push(fontBinaryArray[z][y][x]);
+			}
+		}
+		
+		// update bin representation of this char
+		var bin = squishArray(rotatedCharacters);
+		$(".chareditHolder .characterBin").html( bin.slice(0,16) +"<br/>"+ bin.slice(16,32) );
+		
+		// update hex representation of this char
+		var hex = binToHex(bin);
+		$(".chareditHolder .characterHex").html( "0x"+ hex.slice(0,4) +" 0x"+ hex.slice(4,8) );
+	}
+	
+	function tooltip(e){
+		var t = $("<div class='tooltip'>"+ $(e.currentTarget).attr("data-tip") +"</div>");
+		t.css("top", e.currentTarget.offsetTop + 15).css("left", e.currentTarget.offsetLeft + 40);
+		$("body").append(t);
+	}
+	
+	//
+	// UTILITIES
+	//
+	
+	// walks backwards till it finds parent with z attribute, then return "z" attribute value
+	// TODO - have this break if something goes wrong... seems like while(t) isnt enough
+	function findZ(child){
+		
+		var t = child;
+		
+		do{
+			if(t.attr("data-z")){
+				return t.attr("data-z");
+			}
+			else {
+				t = $(t.parent());
+				continue;
+			}
+		} while(t);
+		
+		// something broke
+		return null;
+		
+	}
+	
+	// grabbed from: http://stackoverflow.com/questions/202605/repeat-string-javascript/5450113#5450113
+	function repeat(pattern, count) {
+		if (count < 1) return '';
+		var result = '';
+		while (count > 0) {
+			if (count & 1) result += pattern;
+			count >>= 1, pattern += pattern;
+		}
+		return result;
+	}
+	
+	// grabbed from: http://james.padolsey.com/javascript/deep-copying-of-objects-and-arrays/
+	function deepCopy(obj) {
+		if (Object.prototype.toString.call(obj) === '[object Array]') {
+			var out = [], i = 0, len = obj.length;
+			for ( ; i < len; i++ ) {
+				out[i] = arguments.callee(obj[i]);
+			}
+			return out;
+		}
+		if (typeof obj === 'object') {
+			var out = {}, i;
+			for ( i in obj ) {
+				out[i] = arguments.callee(obj[i]);
+			}
+			return out;
+		}
+		return obj;
+	}
+	
+	// grabbed from: http://stackoverflow.com/a/69494/957341
+	function disableSelection(target){
+
+		if (typeof target.onselectstart!="undefined") //IE route
+			target.onselectstart=function(){return false}
+
+		else if (typeof target.style.MozUserSelect!="undefined") //Firefox route
+			target.style.MozUserSelect="none"
+
+		else //All other route (ie: Opera)
+			target.onmousedown=function(){return false}
+
+		//target.style.cursor = "default"
+	}
+	
+	// convert bin to hex, or hex to bin
+	function binToHex(bin){
+		var hex = [];
+
+		for(var i=0; i< bin.length-1; i+=4){
+			hex.push( parseInt(bin.substr(i,4),2).toString(16) );
+		}
+		
+		return hex.join("");   
+	}
+	function hexToBin(hex){
+		var bin = [];
+
+		for(var i=0; i< hex.length-1; i+=4){
+			var t = parseInt(hex.substr(i,4),16).toString(2)
+			
+			// include leading zeros
+			while(t.length < 16){
+				t = "0" + t;
+			}
+			
+			bin.push( t );
+		}
+		
+		return bin.join("");		
+	}
+	
+	// sequentially parses multi-dimensional array to string
+	function squishArray(arr){
+		var t = "";
+		
+		for(var i in arr){
+			if(typeof arr[i] == "number"){
+				t += arr[i];
+			} else {
+				t += squishArray(arr[i]);
+			}
+		}
+		
+		return t;
+		
+	}
+</script>
+
+
+</body>
+</html>
